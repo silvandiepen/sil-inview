@@ -26,7 +26,7 @@ export default {
 			},
 			inviewValue: 0,
 			centered: true,
-			active: false,
+			active: true,
 			debug: false
 		};
 		let actions = {
