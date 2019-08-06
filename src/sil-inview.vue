@@ -1,7 +1,10 @@
 <script>
 export default {
 	bind: function(el, binding) {
+		// The observer
 		let observer;
+		
+		// Default settings
 		let settings = {
 			observerOptions: {
 				root: null,
@@ -11,7 +14,7 @@ export default {
 			OGclasses: null,
 			setClasses: true,
 			setCustomProperties: true,
-			output: 'percentage',
+			output: 'number',
 			classes: {
 				inview: 'is-inview',
 				notinview: 'is-not-inview',
@@ -21,12 +24,14 @@ export default {
 			customProperties: {
 				inview: 'inview'
 			},
+			inviewValue: 0,
 			centered: true,
 			active: false,
 			debug: false
 		};
 		let actions = {
 			init: () => {
+				// When there are any custom settings, these are defined here. 
 				if (el.classList.length > 0) {
 					settings.ogclasses = el.classList;
 				}
@@ -56,43 +61,57 @@ export default {
 				}
 			},
 			observer: () => {
+				// Initiate the observer
 				observer = new IntersectionObserver(actions.set, settings.observerOptions);
 				observer.observe(el);
 			},
 			set: (entry) => {
+			
+				// Define variables
 				let outputValue = 0;
-				let inview = entry[0].intersectionRatio;
-				let percentage = Math.floor(inview * 100);
+				settings.inviewValue = entry[0].intersectionRatio;
+				let percentage = Math.floor(settings.inviewValue * 100);
 				
+				
+				// If the returning value is centered, that means that you get back a 0% or 0.5; as a middle value. So your translate can be
+				// 0% when its full inview.
 				if(settings.centered){
-					if(settings.output == 'percentage') { outputValue = (Math.floor(inview * 100) - 100) + '%'; }
-					if(settings.output == 'number') { outputValue = Math.round(inview * 100) / 100; }					
+					if(settings.output == 'percentage') { outputValue = (Math.floor(settings.inviewValue * 100) - 100) + '%'; }
+					if(settings.output == 'number') { outputValue = Math.round(settings.inviewValue * 100) / 100; }					
 				} else {
-					if(settings.output == 'percentage') { outputValue = Math.floor(inview * 100) + '%'; }
-					if(settings.output == 'number') { outputValue = Math.round(inview * 100) / 100; }				
+					if(settings.output == 'percentage') { outputValue = Math.floor(settings.inviewValue * 100) + '%'; }
+					if(settings.output == 'number') { outputValue = Math.round(settings.inviewValue * 100) / 100; }				
 				}
-
-				if (settings.setClasses) {
-					if (inview > 0) el.classList = actions.classes('notinview');
-					else el.classList = actions.classes('notinview');
-				}
-
+				
+				// Set the classes if applicable
+				// el.classList = 
+				actions.classes();
+			
+				// Set the custom properties if applicable
 				if (settings.setCustomProperties) {
 					el.style.setProperty(`--${settings.customProperties.inview}`,outputValue);
 				}
+				
 			},
 			classes: (status) => {
 				let classes = [];
-				switch (status) {
-					case 'inview':
-						classes.push(settings.classes.inview);
-					case 'notinview':
-						classes.push(settings.classes.notinview);
-				}
+				console.log(classes);
+
+				// Check if if its inview
+				if(settings.inviewValue > 0) el.classList.replace(settings.classes.inview,settings.classes.notinview);
+				else el.classList.replace(settings.classes.notinview,settings.classes.inview);
+
+				// Check the position of the fold
+				if(settings.inviewValue > 0) classes.push(settings.classes.inview);
+				else classes.push(settings.classes.inview);
+
+	
 				if (settings.ogclasses) classes.push(settings.ogclasses);
 				return classes.join(' ');
 			}
 		};
+		
+		// Initiate the settings and the observer
 		actions.init();
 		actions.observer();
 	}

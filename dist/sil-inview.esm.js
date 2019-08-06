@@ -1,7 +1,10 @@
-/* eslint-disable */(function(){ if(typeof document !== 'undefined'){ var head=document.head||document.getElementsByTagName('head')[0], style=document.createElement('style'), css=""; style.type='text/css'; if (style.styleSheet){ style.styleSheet.cssText = css; } else { style.appendChild(document.createTextNode(css)); } head.appendChild(style); } })();
+(function(){ if(typeof document !== 'undefined'){ var head=document.head||document.getElementsByTagName('head')[0], style=document.createElement('style'), css=""; style.type='text/css'; if (style.styleSheet){ style.styleSheet.cssText = css; } else { style.appendChild(document.createTextNode(css)); } head.appendChild(style); } })();
 var silInview = {
 	bind: function(el, binding) {
+		// The observer
 		var observer;
+		
+		// Default settings
 		var settings = {
 			observerOptions: {
 				root: null,
@@ -21,12 +24,14 @@ var silInview = {
 			customProperties: {
 				inview: 'inview'
 			},
+			inviewValue: 0,
 			centered: true,
 			active: false,
 			debug: false
 		};
 		var actions = {
 			init: function () {
+				// When there are any custom settings, these are defined here. 
 				if (el.classList.length > 0) {
 					settings.ogclasses = el.classList;
 				}
@@ -56,42 +61,56 @@ var silInview = {
 				}
 			},
 			observer: function () {
+				// Initiate the observer
 				observer = new IntersectionObserver(actions.set, settings.observerOptions);
 				observer.observe(el);
 			},
 			set: function (entry) {
+			
+				// Define variables
 				var outputValue = 0;
-				var inview = entry[0].intersectionRatio;
+				settings.inviewValue = entry[0].intersectionRatio;
 				
+				
+				// If the returning value is centered, that means that you get back a 0% or 0.5; as a middle value. So your translate can be
+				// 0% when its full inview.
 				if(settings.centered){
-					if(settings.output == 'percentage') { outputValue = (Math.floor(inview * 100) - 100) + '%'; }
-					if(settings.output == 'number') { outputValue = Math.round(inview * 100) / 100; }					
+					if(settings.output == 'percentage') { outputValue = (Math.floor(settings.inviewValue * 100) - 100) + '%'; }
+					if(settings.output == 'number') { outputValue = Math.round(settings.inviewValue * 100) / 100; }					
 				} else {
-					if(settings.output == 'percentage') { outputValue = Math.floor(inview * 100) + '%'; }
-					if(settings.output == 'number') { outputValue = Math.round(inview * 100) / 100; }				
+					if(settings.output == 'percentage') { outputValue = Math.floor(settings.inviewValue * 100) + '%'; }
+					if(settings.output == 'number') { outputValue = Math.round(settings.inviewValue * 100) / 100; }				
 				}
-
-				if (settings.setClasses) {
-					if (inview > 0) { el.classList = actions.classes('notinview'); }
-					else { el.classList = actions.classes('notinview'); }
-				}
-
+				
+				// Set the classes if applicable
+				// el.classList = 
+				actions.classes();
+			
+				// Set the custom properties if applicable
 				if (settings.setCustomProperties) {
 					el.style.setProperty(("--" + (settings.customProperties.inview)),outputValue);
 				}
+				
 			},
 			classes: function (status) {
 				var classes = [];
-				switch (status) {
-					case 'inview':
-						classes.push(settings.classes.inview);
-					case 'notinview':
-						classes.push(settings.classes.notinview);
-				}
+				console.log(classes);
+
+				// Check if if its inview
+				if(settings.inviewValue > 0) { el.classList.replace(settings.classes.inview,settings.classes.notinview); }
+				else { el.classList.replace(settings.classes.notinview,settings.classes.inview); }
+
+				// Check the position of the fold
+				if(settings.inviewValue > 0) { classes.push(settings.classes.inview); }
+				else { classes.push(settings.classes.inview); }
+
+	
 				if (settings.ogclasses) { classes.push(settings.ogclasses); }
 				return classes.join(' ');
 			}
 		};
+		
+		// Initiate the settings and the observer
 		actions.init();
 		actions.observer();
 	}
